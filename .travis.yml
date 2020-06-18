@@ -1,0 +1,24 @@
+
+language: generic 
+sudo: required
+services:
+    - docker
+
+before_install:
+  - docker build -t rantalm/react-test -f ./client/Dockerfile.dev ./client
+  
+script:
+  - docker run -e CI=true rantalm/react-test npm test
+
+after_success:
+  - docker build -t rantalm/multi-client ./client
+  - docker build -t rantalm/multi-nginx ./nginx
+  - docker build -t rantalm/multi-server ./server
+  - docker build -t rantalm/multi-worker ./worker
+# Log in to docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+# push those images to docker hub
+- docker push rantalm/multi-client
+- docker push rantalm/multi-nginx
+- docker push rantalm/multi-server
+- docker push rantalm/multi-worker
